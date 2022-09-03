@@ -285,6 +285,16 @@ contract PlatziPunksDNA {
         return _topType[dnaSection % _topType.length];
     }
     
-    //TODO: Calculate DNA  
+   function deterministicPresudoRandomDNA(uint256 _tokenId, address _minter)
+   public 
+   pure
+   returns (uint256)
+   {
+      uint256 combinedParams = _tokenId + uint160(minter);
+      bytes32 memory encodedParams = abi.encodedPacked(combinedParams);
+      bytes32 memory hashedParams = keccak256(encodedParams);
+
+      return uint256(hashedParams);
+    }
 
   }
