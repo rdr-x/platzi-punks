@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.9;
+
+pragma solidity ^0.8.0;
 
 contract PlatziPunksDNA {
-  
     string[] private _accessoriesType = [
         "Blank",
         "Kurt",
@@ -200,24 +200,45 @@ contract PlatziPunksDNA {
         "ShortHairTheCaesar",
         "ShortHairTheCaesarSidePart"
     ];
-  
-    function _getDNASection (uint256 _dna, uint8 _rightDiscard)
-    internal
-    pure
-    returns (uint8) {
-        return  uint8(_dna % (1*10**(_rightDiscard + ADN_SECTION_SIZE))) / (1*10**_rightDiscard);
-      }
 
-    function _getAccesoriesType(uint8 _dna)
-    public
-    view
-    returns (string memory)
+    // This pseudo random function is determistic and should not be used on production
+    function deterministicPseudoRandomDNA(uint256 _tokenId, address _minter)
+        public
+        pure
+        returns (uint256)
     {
-      uint8 dnaSection = _getDNASection(_dna,0);
-      return _accessoriesType(dnaSection % _accessoriesType.length);
+        uint256 combinedParams = _tokenId + uint160(_minter);
+        bytes memory encodedParams = abi.encodePacked(combinedParams);
+        bytes32 hashedParams = keccak256(encodedParams);
+
+        return uint256(hashedParams);
     }
 
-    function _getClotheColor(uint8 _dna) public view returns (string memory) {
+    // Get attributes
+    uint8 constant ADN_SECTION_SIZE = 2;
+
+    function _getDNASection(uint256 _dna, uint8 _rightDiscard)
+        internal
+        pure
+        returns (uint8)
+    {
+        return
+            uint8(
+                (_dna % (1 * 10**(_rightDiscard + ADN_SECTION_SIZE))) /
+                    (1 * 10**_rightDiscard)
+            );
+    }
+
+    function getAccessoriesType(uint256 _dna)
+        public
+        view
+        returns (string memory)
+    {
+        uint8 dnaSection = _getDNASection(_dna, 0);
+        return _accessoriesType[dnaSection % _accessoriesType.length];
+    }
+
+    function getClotheColor(uint256 _dna) public view returns (string memory) {
         uint8 dnaSection = _getDNASection(_dna, 2);
         return _clotheColor[dnaSection % _clotheColor.length];
     }
@@ -284,17 +305,4 @@ contract PlatziPunksDNA {
         uint256 dnaSection = _getDNASection(_dna, 24);
         return _topType[dnaSection % _topType.length];
     }
-    
-   function deterministicPresudoRandomDNA(uint256 _tokenId, address _minter)
-   public 
-   pure
-   returns (uint256)
-   {
-      uint256 combinedParams = _tokenId + uint160(minter);
-      bytes32 memory encodedParams = abi.encodedPacked(combinedParams);
-      bytes32 memory hashedParams = keccak256(encodedParams);
-
-      return uint256(hashedParams);
-    }
-
-  }
+}
